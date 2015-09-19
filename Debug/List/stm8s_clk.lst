@@ -1,0 +1,815 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V2.10.4.157 for STM8                 19/Sep/2015  09:42:59
+# Copyright 2010-2015 IAR Systems AB.
+#
+#    Source file  =  
+#        D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Libraries\STM8S_StdPeriph_Driver\src\stm8s_clk.c
+#    Command line =  
+#        "D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Libraries\STM8S_StdPeriph_Driver\src\stm8s_clk.c"
+#        -e --char_is_signed -On --no_cse --no_unroll --no_inline
+#        --no_code_motion --no_tbaa --no_cross_call --debug --code_model small
+#        --data_model medium -o "D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Debug\Obj\" --dlib_config "D:\Program
+#        Files\IAR Systems\Embedded Workbench 7.0\stm8\LIB\dlstm8smn.h" -D
+#        STM8S103F3P -D USE_STM8_128_EVAL -lcN "D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Debug\List\" -lB "D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Debug\List\" -I "D:\Data form
+#        C\SRT\PWM调光项目\STM8继电器工程\Libraries\STM8S_StdPeriph_Driver\inc\"
+#        -I "D:\Data form C\SRT\PWM调光项目\STM8继电器工程\HAL\" -I "D:\Data
+#        form C\SRT\PWM调光项目\STM8继电器工程\src\" --vregs 16
+#    List file    =  
+#        D:\Data form C\SRT\PWM调光项目\STM8继电器工程\Debug\List\stm8s_clk.lst
+#    Object file  =  
+#        D:\Data form C\SRT\PWM调光项目\STM8继电器工程\Debug\Obj\stm8s_clk.o
+#
+###############################################################################
+
+D:\Data form C\SRT\PWM调光项目\STM8继电器工程\Libraries\STM8S_StdPeriph_Driver\src\stm8s_clk.c
+      1          /**
+      2            ******************************************************************************
+      3            * @file    stm8s_clk.c
+      4            * @author  MCD Application Team
+      5            * @version V2.1.0
+      6            * @date    18-November-2011
+      7            * @brief   This file contains all the functions for the CLK peripheral.
+      8            ******************************************************************************
+      9            * @attention
+     10            *
+     11            * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+     12            * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
+     13            * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
+     14            * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
+     15            * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
+     16            * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+     17            *
+     18            * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
+     19            ******************************************************************************
+     20            */
+     21          
+     22          /* Includes ------------------------------------------------------------------*/
+     23          
+     24          #include "stm8s_clk.h"
+     25          
+     26          /** @addtogroup STM8S_StdPeriph_Driver
+     27            * @{
+     28            */
+     29          /* Private typedef -----------------------------------------------------------*/
+     30          /* Private define ------------------------------------------------------------*/
+     31          /* Private macro -------------------------------------------------------------*/
+     32          /* Private variables ---------------------------------------------------------*/
+     33          /* Private function prototypes -----------------------------------------------*/
+     34          
+     35          /* Private Constants ---------------------------------------------------------*/
+     36          
+     37          /**
+     38            * @addtogroup CLK_Private_Constants
+     39            * @{
+     40            */
+     41          
+     42          CONST uint8_t HSIDivFactor[4] = {1, 2, 4, 8}; /*!< Holds the different HSI Divider factors */
+     43          CONST uint8_t CLKPrescTable[8] = {1, 2, 4, 8, 10, 16, 20, 40}; /*!< Holds the different CLK prescaler values */
+     44          
+     45          /**
+     46            * @}
+     47            */
+     48          
+     49          /* Public functions ----------------------------------------------------------*/
+     50          /**
+     51            * @addtogroup CLK_Public_Functions
+     52            * @{
+     53            */
+     54          
+     55          /**
+     56            * @brief  Deinitializes the CLK peripheral registers to their default reset
+     57            * values.
+     58            * @param  None
+     59            * @retval None
+     60            * @par Warning:
+     61            * Resetting the CCOR register: \n
+     62            * When the CCOEN bit is set, the reset of the CCOR register require
+     63            * two consecutive write instructions in order to reset first the CCOEN bit
+     64            * and the second one is to reset the CCOSEL bits.
+     65            */
+     66          void CLK_DeInit(void)
+     67          {
+     68          
+     69              CLK->ICKR = CLK_ICKR_RESET_VALUE;
+     70              CLK->ECKR = CLK_ECKR_RESET_VALUE;
+     71              CLK->SWR  = CLK_SWR_RESET_VALUE;
+     72              CLK->SWCR = CLK_SWCR_RESET_VALUE;
+     73              CLK->CKDIVR = CLK_CKDIVR_RESET_VALUE;
+     74              CLK->PCKENR1 = CLK_PCKENR1_RESET_VALUE;
+     75              CLK->PCKENR2 = CLK_PCKENR2_RESET_VALUE;
+     76              CLK->CSSR = CLK_CSSR_RESET_VALUE;
+     77              CLK->CCOR = CLK_CCOR_RESET_VALUE;
+     78              while ((CLK->CCOR & CLK_CCOR_CCOEN)!= 0)
+     79              {}
+     80              CLK->CCOR = CLK_CCOR_RESET_VALUE;
+     81              CLK->HSITRIMR = CLK_HSITRIMR_RESET_VALUE;
+     82              CLK->SWIMCCR = CLK_SWIMCCR_RESET_VALUE;
+     83          
+     84          }
+     85          
+     86          /**
+     87            * @brief  Enable or Disable the External High Speed oscillator (HSE).
+     88            * @param   NewState new state of HSEEN, value accepted ENABLE, DISABLE.
+     89            * @retval None
+     90            */
+     91          void CLK_HSECmd(FunctionalState NewState)
+     92          {
+     93          
+     94              /* Check the parameters */
+     95              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+     96          
+     97              if (NewState != DISABLE)
+     98              {
+     99                  /* Set HSEEN bit */
+    100                  CLK->ECKR |= CLK_ECKR_HSEEN;
+    101              }
+    102              else
+    103              {
+    104                  /* Reset HSEEN bit */
+    105                  CLK->ECKR &= (uint8_t)(~CLK_ECKR_HSEEN);
+    106              }
+    107          
+    108          }
+    109          
+    110          /**
+    111            * @brief  Enables or disables the Internal High Speed oscillator (HSI).
+    112            * @param   NewState new state of HSIEN, value accepted ENABLE, DISABLE.
+    113            * @retval None
+    114            */
+    115          void CLK_HSICmd(FunctionalState NewState)
+    116          {
+    117          
+    118              /* Check the parameters */
+    119              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    120          
+    121              if (NewState != DISABLE)
+    122              {
+    123                  /* Set HSIEN bit */
+    124                  CLK->ICKR |= CLK_ICKR_HSIEN;
+    125              }
+    126              else
+    127              {
+    128                  /* Reset HSIEN bit */
+    129                  CLK->ICKR &= (uint8_t)(~CLK_ICKR_HSIEN);
+    130              }
+    131          
+    132          }
+    133          
+    134          /**
+    135            * @brief  Enables or disables the Internal Low Speed oscillator (LSI).
+    136            * @param    NewState new state of LSIEN, value accepted ENABLE, DISABLE.
+    137            * @retval None
+    138            */
+    139          void CLK_LSICmd(FunctionalState NewState)
+    140          {
+    141          
+    142              /* Check the parameters */
+    143              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    144          
+    145              if (NewState != DISABLE)
+    146              {
+    147                  /* Set LSIEN bit */
+    148                  CLK->ICKR |= CLK_ICKR_LSIEN;
+    149              }
+    150              else
+    151              {
+    152                  /* Reset LSIEN bit */
+    153                  CLK->ICKR &= (uint8_t)(~CLK_ICKR_LSIEN);
+    154              }
+    155          
+    156          }
+    157          
+    158          /**
+    159            * @brief  Enables or disablle the Configurable Clock Output (CCO).
+    160            * @param   NewState : New state of CCEN bit (CCO register).
+    161            * This parameter can be any of the @ref FunctionalState enumeration.
+    162            * @retval None
+    163            */
+    164          void CLK_CCOCmd(FunctionalState NewState)
+    165          {
+    166          
+    167              /* Check the parameters */
+    168              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    169          
+    170              if (NewState != DISABLE)
+    171              {
+    172                  /* Set CCOEN bit */
+    173                  CLK->CCOR |= CLK_CCOR_CCOEN;
+    174              }
+    175              else
+    176              {
+    177                  /* Reset CCOEN bit */
+    178                  CLK->CCOR &= (uint8_t)(~CLK_CCOR_CCOEN);
+    179              }
+    180          
+    181          }
+    182          
+    183          /**
+    184            * @brief  Starts or Stops manually the clock switch execution.
+    185            * @par Full description:
+    186            * NewState parameter set the SWEN.
+    187            * @param   NewState new state of SWEN, value accepted ENABLE, DISABLE.
+    188            * @retval None
+    189            */
+    190          void CLK_ClockSwitchCmd(FunctionalState NewState)
+    191          {
+    192          
+    193              /* Check the parameters */
+    194              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    195          
+    196              if (NewState != DISABLE )
+    197              {
+    198                  /* Enable the Clock Switch */
+    199                  CLK->SWCR |= CLK_SWCR_SWEN;
+    200              }
+    201              else
+    202              {
+    203                  /* Disable the Clock Switch */
+    204                  CLK->SWCR &= (uint8_t)(~CLK_SWCR_SWEN);
+    205              }
+    206          
+    207          }
+    208          
+    209          /**
+    210            * @brief  Configures the slow active halt wake up
+    211            * @param   NewState: specifies the Slow Active Halt wake up state.
+    212            * can be set of the following values:
+    213            * - DISABLE: Slow Active Halt mode disabled;
+    214            * - ENABLE:  Slow Active Halt mode enabled.
+    215            * @retval None
+    216            */
+    217          void CLK_SlowActiveHaltWakeUpCmd(FunctionalState NewState)
+    218          {
+    219          
+    220              /* check the parameters */
+    221              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    222          
+    223              if (NewState != DISABLE)
+    224              {
+    225                  /* Set S_ACTHALT bit */
+    226                  CLK->ICKR |= CLK_ICKR_SWUAH;
+    227              }
+    228              else
+    229              {
+    230                  /* Reset S_ACTHALT bit */
+    231                  CLK->ICKR &= (uint8_t)(~CLK_ICKR_SWUAH);
+    232              }
+    233          
+    234          }
+    235          
+    236          /**
+    237            * @brief   Enables or disables the specified peripheral CLK.
+    238            * @param   CLK_Peripheral : This parameter specifies the peripheral clock to gate.
+    239            * This parameter can be any of the  @ref CLK_Peripheral_TypeDef enumeration.
+    240            * @param   NewState : New state of specified peripheral clock.
+    241            * This parameter can be any of the @ref FunctionalState enumeration.
+    242            * @retval None
+    243            */
+    244          void CLK_PeripheralClockConfig(CLK_Peripheral_TypeDef CLK_Peripheral, FunctionalState NewState)
+    245          {
+    246          
+    247              /* Check the parameters */
+    248          //    assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    249          //   assert_param(IS_CLK_PERIPHERAL_OK(CLK_Peripheral));
+    250          
+    251              if (((uint8_t)CLK_Peripheral & (uint8_t)0x10) == 0x00)
+    252              {
+    253                  if (NewState != DISABLE)
+    254                  {
+    255                      /* Enable the peripheral Clock */
+    256                      CLK->PCKENR1 |= (uint8_t)((uint8_t)1 << ((uint8_t)CLK_Peripheral & (uint8_t)0x0F));
+    257                  }
+    258               //   else
+    259               //   {
+    260                      /* Disable the peripheral Clock */
+    261                 //     CLK->PCKENR1 &= (uint8_t)(~(uint8_t)(((uint8_t)1 << ((uint8_t)CLK_Peripheral & (uint8_t)0x0F))));
+    262              //    }
+    263              }
+    264              else
+    265              {
+    266                  if (NewState != DISABLE)
+    267                  {
+    268                      /* Enable the peripheral Clock */
+    269                      CLK->PCKENR2 |= (uint8_t)((uint8_t)1 << ((uint8_t)CLK_Peripheral & (uint8_t)0x0F));
+    270                  }
+    271              //    else
+    272              //    {
+    273                      /* Disable the peripheral Clock */
+    274              //        CLK->PCKENR2 &= (uint8_t)(~(uint8_t)(((uint8_t)1 << ((uint8_t)CLK_Peripheral & (uint8_t)0x0F))));
+    275              //    }
+    276              }
+    277          
+    278          }
+    279          
+    280          /**
+    281            * @brief  configures the Switch from one clock to another
+    282            * @param   CLK_SwitchMode select the clock switch mode.
+    283            * It can be set of the values of @ref CLK_SwitchMode_TypeDef
+    284            * @param   CLK_NewClock choice of the future clock.
+    285            * It can be set of the values of @ref CLK_Source_TypeDef
+    286            * @param   NewState Enable or Disable the Clock Switch interrupt.
+    287            * @param   CLK_CurrentClockState current clock to switch OFF or to keep ON.
+    288            * It can be set of the values of @ref CLK_CurrentClockState_TypeDef
+    289            * @retval ErrorStatus this shows the clock switch status (ERROR/SUCCESS).
+    290            */
+    291          ErrorStatus CLK_ClockSwitchConfig(CLK_SwitchMode_TypeDef CLK_SwitchMode, CLK_Source_TypeDef CLK_NewClock, FunctionalState ITState, CLK_CurrentClockState_TypeDef CLK_CurrentClockState)
+    292          {
+    293          
+    294              CLK_Source_TypeDef clock_master;
+    295              uint16_t DownCounter = CLK_TIMEOUT;
+    296              ErrorStatus Swif = ERROR;
+    297          
+    298              /* Check the parameters */
+    299              assert_param(IS_CLK_SOURCE_OK(CLK_NewClock));
+    300              assert_param(IS_CLK_SWITCHMODE_OK(CLK_SwitchMode));
+    301              assert_param(IS_FUNCTIONALSTATE_OK(ITState));
+    302              assert_param(IS_CLK_CURRENTCLOCKSTATE_OK(CLK_CurrentClockState));
+    303          
+    304              /* Current clock master saving */
+    305              clock_master = (CLK_Source_TypeDef)CLK->CMSR;
+    306          
+    307              /* Automatic switch mode management */
+    308              if (CLK_SwitchMode == CLK_SWITCHMODE_AUTO)
+    309              {
+    310          
+    311                  /* Enables Clock switch */
+    312                  CLK->SWCR |= CLK_SWCR_SWEN;
+    313          
+    314                  /* Enables or Disables Switch interrupt */
+    315                  if (ITState != DISABLE)
+    316                  {
+    317                      CLK->SWCR |= CLK_SWCR_SWIEN;
+    318                  }
+    319                  else
+    320                  {
+    321                      CLK->SWCR &= (uint8_t)(~CLK_SWCR_SWIEN);
+    322                  }
+    323          
+    324                  /* Selection of the target clock source */
+    325                  CLK->SWR = (uint8_t)CLK_NewClock;
+    326          
+    327                  while ((((CLK->SWCR & CLK_SWCR_SWBSY) != 0 )&& (DownCounter != 0)))
+    328                  {
+    329                      DownCounter--;
+    330                  }
+    331          
+    332                  if (DownCounter != 0)
+    333                  {
+    334                      Swif = SUCCESS;
+    335                  }
+    336                  else
+    337                  {
+    338                      Swif = ERROR;
+    339                  }
+    340          
+    341              }
+    342              else /* CLK_SwitchMode == CLK_SWITCHMODE_MANUAL */
+    343              {
+    344          
+    345                  /* Enables or Disables Switch interrupt  if required  */
+    346                  if (ITState != DISABLE)
+    347                  {
+    348                      CLK->SWCR |= CLK_SWCR_SWIEN;
+    349                  }
+    350                  else
+    351                  {
+    352                      CLK->SWCR &= (uint8_t)(~CLK_SWCR_SWIEN);
+    353                  }
+    354          
+    355                  /* Selection of the target clock source */
+    356                  CLK->SWR = (uint8_t)CLK_NewClock;
+    357          
+    358                  /* In manual mode, there is no risk to be stuck in a loop, value returned
+    359                    is then always SUCCESS */
+    360                  Swif = SUCCESS;
+    361          
+    362              }
+    363          
+    364              /* Switch OFF current clock if required */
+    365              if ((CLK_CurrentClockState == CLK_CURRENTCLOCKSTATE_DISABLE) && ( clock_master == CLK_SOURCE_HSI))
+    366              {
+    367                  CLK->ICKR &= (uint8_t)(~CLK_ICKR_HSIEN);
+    368              }
+    369              else if ((CLK_CurrentClockState == CLK_CURRENTCLOCKSTATE_DISABLE) && ( clock_master == CLK_SOURCE_LSI))
+    370              {
+    371                  CLK->ICKR &= (uint8_t)(~CLK_ICKR_LSIEN);
+    372              }
+    373              else if ((CLK_CurrentClockState == CLK_CURRENTCLOCKSTATE_DISABLE) && ( clock_master == CLK_SOURCE_HSE))
+    374              {
+    375                  CLK->ECKR &= (uint8_t)(~CLK_ECKR_HSEEN);
+    376              }
+    377          
+    378              return(Swif);
+    379          
+    380          }
+    381          
+    382          /**
+    383            * @brief  Configures the HSI clock dividers.
+    384            * @param   HSIPrescaler : Specifies the HSI clock divider to apply.
+    385            * This parameter can be any of the @ref CLK_Prescaler_TypeDef enumeration.
+    386            * @retval None
+    387            */
+    388          void CLK_HSIPrescalerConfig(CLK_Prescaler_TypeDef HSIPrescaler)
+    389          {
+    390          
+    391              /* check the parameters */
+    392              assert_param(IS_CLK_HSIPRESCALER_OK(HSIPrescaler));
+    393          
+    394              /* Clear High speed internal clock prescaler */
+    395              CLK->CKDIVR &= (uint8_t)(~CLK_CKDIVR_HSIDIV);
+    396          
+    397              /* Set High speed internal clock prescaler */
+    398              CLK->CKDIVR |= (uint8_t)HSIPrescaler;
+    399          
+    400          }
+    401          
+    402          /**
+    403            * @brief  Output the selected clock on a dedicated I/O pin.
+    404            * @param   CLK_CCO : Specifies the clock source.
+    405            * This parameter can be any of the  @ref CLK_Output_TypeDef enumeration.
+    406            * @retval None
+    407            * @par Required preconditions:
+    408            * The dedicated I/O pin must be set at 1 in the corresponding Px_CR1 register \n
+    409            * to be set as input with pull-up or push-pull output.
+    410            */
+    411          void CLK_CCOConfig(CLK_Output_TypeDef CLK_CCO)
+    412          {
+    413          
+    414              /* check the parameters */
+    415              assert_param(IS_CLK_OUTPUT_OK(CLK_CCO));
+    416          
+    417              /* Clears of the CCO type bits part */
+    418              CLK->CCOR &= (uint8_t)(~CLK_CCOR_CCOSEL);
+    419          
+    420              /* Selects the source provided on cco_ck output */
+    421              CLK->CCOR |= (uint8_t)CLK_CCO;
+    422          
+    423              /* Enable the clock output */
+    424              CLK->CCOR |= CLK_CCOR_CCOEN;
+    425          
+    426          }
+    427          
+    428          /**
+    429            * @brief   Enables or disables the specified CLK interrupts.
+    430            * @param   CLK_IT This parameter specifies the interrupt sources.
+    431            * It can be one of the values of @ref CLK_IT_TypeDef.
+    432            * @param   NewState New state of the Interrupt.
+    433            * Value accepted ENABLE, DISABLE.
+    434            * @retval None
+    435            */
+    436          void CLK_ITConfig(CLK_IT_TypeDef CLK_IT, FunctionalState NewState)
+    437          {
+    438          
+    439              /* check the parameters */
+    440              assert_param(IS_FUNCTIONALSTATE_OK(NewState));
+    441              assert_param(IS_CLK_IT_OK(CLK_IT));
+    442          
+    443              if (NewState != DISABLE)
+    444              {
+    445                  switch (CLK_IT)
+    446                  {
+    447                  case CLK_IT_SWIF: /* Enable the clock switch interrupt */
+    448                      CLK->SWCR |= CLK_SWCR_SWIEN;
+    449                      break;
+    450                  case CLK_IT_CSSD: /* Enable the clock security system detection interrupt */
+    451                      CLK->CSSR |= CLK_CSSR_CSSDIE;
+    452                      break;
+    453                  default:
+    454                      break;
+    455                  }
+    456              }
+    457              else  /*(NewState == DISABLE)*/
+    458              {
+    459                  switch (CLK_IT)
+    460                  {
+    461                  case CLK_IT_SWIF: /* Disable the clock switch interrupt */
+    462                      CLK->SWCR  &= (uint8_t)(~CLK_SWCR_SWIEN);
+    463                      break;
+    464                  case CLK_IT_CSSD: /* Disable the clock security system detection interrupt */
+    465                      CLK->CSSR &= (uint8_t)(~CLK_CSSR_CSSDIE);
+    466                      break;
+    467                  default:
+    468                      break;
+    469                  }
+    470              }
+    471          
+    472          }
+    473          
+    474          /**
+    475            * @brief  Configures the HSI and CPU clock dividers.
+    476            * @param   ClockPrescaler Specifies the HSI or CPU clock divider to apply.
+    477            * @retval None
+    478            */
+    479          void CLK_SYSCLKConfig(CLK_Prescaler_TypeDef CLK_Prescaler)
+    480          {
+    481          
+    482              /* check the parameters */
+    483           //   assert_param(IS_CLK_PRESCALER_OK(CLK_Prescaler));
+    484          
+    485              if (((uint8_t)CLK_Prescaler & (uint8_t)0x80) == 0x00) /* Bit7 = 0 means HSI divider */
+    486              {
+    487                  CLK->CKDIVR &= (uint8_t)(~CLK_CKDIVR_HSIDIV);
+    488                  CLK->CKDIVR |= (uint8_t)((uint8_t)CLK_Prescaler & (uint8_t)CLK_CKDIVR_HSIDIV);
+    489              }
+    490              else /* Bit7 = 1 means CPU divider */
+    491              {
+    492                  CLK->CKDIVR &= (uint8_t)(~CLK_CKDIVR_CPUDIV);
+    493                  CLK->CKDIVR |= (uint8_t)((uint8_t)CLK_Prescaler & (uint8_t)CLK_CKDIVR_CPUDIV);
+    494              }
+    495          
+    496          }
+    497          /**
+    498            * @brief  Configures the SWIM clock frequency on the fly.
+    499            * @param   CLK_SWIMDivider Specifies the SWIM clock divider to apply.
+    500            * can be one of the value of @ref CLK_SWIMDivider_TypeDef
+    501            * @retval None
+    502            */
+    503          void CLK_SWIMConfig(CLK_SWIMDivider_TypeDef CLK_SWIMDivider)
+    504          {
+    505          
+    506              /* check the parameters */
+    507              assert_param(IS_CLK_SWIMDIVIDER_OK(CLK_SWIMDivider));
+    508          
+    509              if (CLK_SWIMDivider != CLK_SWIMDIVIDER_2)
+    510              {
+    511                  /* SWIM clock is not divided by 2 */
+    512                  CLK->SWIMCCR |= CLK_SWIMCCR_SWIMDIV;
+    513              }
+    514              else /* CLK_SWIMDivider == CLK_SWIMDIVIDER_2 */
+    515              {
+    516                  /* SWIM clock is divided by 2 */
+    517                  CLK->SWIMCCR &= (uint8_t)(~CLK_SWIMCCR_SWIMDIV);
+    518              }
+    519          
+    520          }
+    521          
+    522          /**
+    523            * @brief  Enables the Clock Security System.
+    524            * @par Full description:
+    525            * once CSS is enabled it cannot be disabled until the next reset.
+    526            * @param  None
+    527            * @retval None
+    528            */
+    529          void CLK_ClockSecuritySystemEnable(void)
+    530          {
+    531              /* Set CSSEN bit */
+    532              CLK->CSSR |= CLK_CSSR_CSSEN;
+    533          }
+    534          
+    535          /**
+    536            * @brief  Returns the clock source used as system clock.
+    537            * @param  None
+    538            * @retval  Clock source used.
+    539            * can be one of the values of @ref CLK_Source_TypeDef
+    540            */
+    541          CLK_Source_TypeDef CLK_GetSYSCLKSource(void)
+    542          {
+    543              return((CLK_Source_TypeDef)CLK->CMSR);
+    544          }
+    545          
+    546          /**
+    547            * @brief  This function returns the frequencies of different on chip clocks.
+    548            * @param  None
+    549            * @retval the master clock frequency
+    550            */
+    551          uint32_t CLK_GetClockFreq(void)
+    552          {
+    553          
+    554              uint32_t clockfrequency = 0;
+    555              CLK_Source_TypeDef clocksource = CLK_SOURCE_HSI;
+    556              uint8_t tmp = 0, presc = 0;
+    557          
+    558              /* Get CLK source. */
+    559              clocksource = (CLK_Source_TypeDef)CLK->CMSR;
+    560          
+    561              if (clocksource == CLK_SOURCE_HSI)
+    562              {
+    563                  tmp = (uint8_t)(CLK->CKDIVR & CLK_CKDIVR_HSIDIV);
+    564                  tmp = (uint8_t)(tmp >> 3);
+    565                  presc = HSIDivFactor[tmp];
+    566                  clockfrequency = HSI_VALUE / presc;
+    567              }
+    568              else if ( clocksource == CLK_SOURCE_LSI)
+    569              {
+    570                  clockfrequency = LSI_VALUE;
+    571              }
+    572              else
+    573              {
+    574                  clockfrequency = HSE_VALUE;
+    575              }
+    576          
+    577              return((uint32_t)clockfrequency);
+    578          
+    579          }
+    580          
+    581          /**
+    582            * @brief  Adjusts the Internal High Speed oscillator (HSI) calibration value.
+    583            * @par Full description:
+    584            * @param   CLK_HSICalibrationValue calibration trimming value.
+    585            * can be one of the values of @ref CLK_HSITrimValue_TypeDef
+    586            * @retval None
+    587            */
+    588          void CLK_AdjustHSICalibrationValue(CLK_HSITrimValue_TypeDef CLK_HSICalibrationValue)
+    589          {
+    590          
+    591              /* check the parameters */
+    592              assert_param(IS_CLK_HSITRIMVALUE_OK(CLK_HSICalibrationValue));
+    593          
+    594              /* Store the new value */
+    595              CLK->HSITRIMR = (uint8_t)( (uint8_t)(CLK->HSITRIMR & (uint8_t)(~CLK_HSITRIMR_HSITRIM))|((uint8_t)CLK_HSICalibrationValue));
+    596          
+    597          }
+    598          
+    599          /**
+    600            * @brief  Reset the SWBSY flag (SWICR Reister)
+    601            * @par Full description:
+    602            * This function reset SWBSY flag in order to reset clock switch operations (target
+    603            * oscillator is broken, stabilization is longing too much, etc.).  If at the same time \n
+    604            * software attempts to set SWEN and clear SWBSY, SWBSY action takes precedence.
+    605            * @param  None
+    606            * @retval None
+    607            */
+    608          void CLK_SYSCLKEmergencyClear(void)
+    609          {
+    610              CLK->SWCR &= (uint8_t)(~CLK_SWCR_SWBSY);
+    611          }
+    612          
+    613          /**
+    614            * @brief  Checks whether the specified CLK flag is set or not.
+    615            * @par Full description:
+    616            * @param   CLK_FLAG Flag to check.
+    617            * can be one of the values of @ref CLK_Flag_TypeDef
+    618            * @retval FlagStatus, status of the checked flag
+    619            */
+    620          FlagStatus CLK_GetFlagStatus(CLK_Flag_TypeDef CLK_FLAG)
+    621          {
+    622          
+    623              uint16_t statusreg = 0;
+    624              uint8_t tmpreg = 0;
+    625              FlagStatus bitstatus = RESET;
+    626          
+    627              /* check the parameters */
+    628              assert_param(IS_CLK_FLAG_OK(CLK_FLAG));
+    629          
+    630              /* Get the CLK register index */
+    631              statusreg = (uint16_t)((uint16_t)CLK_FLAG & (uint16_t)0xFF00);
+    632          
+    633          
+    634              if (statusreg == 0x0100) /* The flag to check is in ICKRregister */
+    635              {
+    636                  tmpreg = CLK->ICKR;
+    637              }
+    638              else if (statusreg == 0x0200) /* The flag to check is in ECKRregister */
+    639              {
+    640                  tmpreg = CLK->ECKR;
+    641              }
+    642              else if (statusreg == 0x0300) /* The flag to check is in SWIC register */
+    643              {
+    644                  tmpreg = CLK->SWCR;
+    645              }
+    646              else if (statusreg == 0x0400) /* The flag to check is in CSS register */
+    647              {
+    648                  tmpreg = CLK->CSSR;
+    649              }
+    650              else /* The flag to check is in CCO register */
+    651              {
+    652                  tmpreg = CLK->CCOR;
+    653              }
+    654          
+    655              if ((tmpreg & (uint8_t)CLK_FLAG) != (uint8_t)RESET)
+    656              {
+    657                  bitstatus = SET;
+    658              }
+    659              else
+    660              {
+    661                  bitstatus = RESET;
+    662              }
+    663          
+    664              /* Return the flag status */
+    665              return((FlagStatus)bitstatus);
+    666          
+    667          }
+    668          
+    669          /**
+    670            * @brief  Checks whether the specified CLK interrupt has is enabled or not.
+    671            * @param   CLK_IT specifies the CLK interrupt.
+    672            * can be one of the values of @ref CLK_IT_TypeDef
+    673            * @retval ITStatus, new state of CLK_IT (SET or RESET).
+    674            */
+    675          ITStatus CLK_GetITStatus(CLK_IT_TypeDef CLK_IT)
+    676          {
+    677          
+    678              ITStatus bitstatus = RESET;
+    679          
+    680              /* check the parameters */
+    681              assert_param(IS_CLK_IT_OK(CLK_IT));
+    682          
+    683              if (CLK_IT == CLK_IT_SWIF)
+    684              {
+    685                  /* Check the status of the clock switch interrupt */
+    686                  if ((CLK->SWCR & (uint8_t)CLK_IT) == (uint8_t)0x0C)
+    687                  {
+    688                      bitstatus = SET;
+    689                  }
+    690                  else
+    691                  {
+    692                      bitstatus = RESET;
+    693                  }
+    694              }
+    695              else /* CLK_IT == CLK_IT_CSSDIE */
+    696              {
+    697                  /* Check the status of the security system detection interrupt */
+    698                  if ((CLK->CSSR & (uint8_t)CLK_IT) == (uint8_t)0x0C)
+    699                  {
+    700                      bitstatus = SET;
+    701                  }
+    702                  else
+    703                  {
+    704                      bitstatus = RESET;
+    705                  }
+    706              }
+    707          
+    708              /* Return the CLK_IT status */
+    709              return bitstatus;
+    710          
+    711          }
+    712          
+    713          /**
+    714            * @brief  Clears the CLK抯 interrupt pending bits.
+    715            * @param   CLK_IT specifies the interrupt pending bits.
+    716            * can be one of the values of @ref CLK_IT_TypeDef
+    717            * @retval None
+    718            */
+    719          void CLK_ClearITPendingBit(CLK_IT_TypeDef CLK_IT)
+    720          {
+    721          
+    722              /* check the parameters */
+    723              assert_param(IS_CLK_IT_OK(CLK_IT));
+    724          
+    725              if (CLK_IT == (uint8_t)CLK_IT_CSSD)
+    726              {
+    727                  /* Clear the status of the security system detection interrupt */
+    728                  CLK->CSSR &= (uint8_t)(~CLK_CSSR_CSSD);
+    729              }
+    730              else /* CLK_PendingBit == (uint8_t)CLK_IT_SWIF */
+    731              {
+    732                  /* Clear the status of the clock switch interrupt */
+    733                  CLK->SWCR &= (uint8_t)(~CLK_SWCR_SWIF);
+    734              }
+    735          
+    736          }
+    737          /**
+    738            * @}
+    739            */
+    740            
+    741          /**
+    742            * @}
+    743            */
+    744            
+    745          /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      95  ?_0
+       8  CLKPrescTable
+      79  CLK_AdjustHSICalibrationValue
+      47  CLK_CCOCmd
+     119  CLK_CCOConfig
+      51  CLK_ClearITPendingBit
+       5  CLK_ClockSecuritySystemEnable
+      47  CLK_ClockSwitchCmd
+     269  CLK_ClockSwitchConfig
+      54  CLK_DeInit
+     125  CLK_GetClockFreq
+     187  CLK_GetFlagStatus
+      82  CLK_GetITStatus
+       4  CLK_GetSYSCLKSource
+      47  CLK_HSECmd
+      47  CLK_HSICmd
+      61  CLK_HSIPrescalerConfig
+     115  CLK_ITConfig
+      47  CLK_LSICmd
+      53  CLK_PeripheralClockConfig
+      47  CLK_SWIMConfig
+      49  CLK_SYSCLKConfig
+       5  CLK_SYSCLKEmergencyClear
+      47  CLK_SlowActiveHaltWakeUpCmd
+       4  HSIDivFactor
+
+ 
+   107 bytes in section .near.rodata
+ 1 587 bytes in section .near_func.text
+ 
+ 1 587 bytes of CODE  memory
+   107 bytes of CONST memory
+
+Errors: none
+Warnings: none
